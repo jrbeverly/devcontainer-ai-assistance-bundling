@@ -1,0 +1,5 @@
+# Generated working context (context/sync.sh)
+.claude/corpus/
+
+# Evaluation output
+evaluation/results.md

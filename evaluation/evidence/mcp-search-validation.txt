@@ -1,0 +1,29 @@
+MCP Search Validation
+Corpus: context/source/ (5 files) → mounted at /corpus:ro in corpus-mcp image
+Date: 2026-08-30
+Image: corpus-mcp (node:20-alpine, server.js)
+
+Protocol: JSON-RPC 2.0 over stdio
+Search semantics: AND over lowercase terms against (heading + text)
+
+--- query: "entrypoint" → expected 01-platform.md ---
+{"jsonrpc":"2.0","id":1,"result":{"protocolVersion":"2024-11-05","capabilities":{"tools":{}},"serverInfo":{"name":"corpus-search","version":"1.0.0"}}}
+{"jsonrpc":"2.0","id":2,"result":{"content":[{"type":"text","text":"[01-platform.md § Platform]\nPlain ESM JavaScript, Node 20, zero dependencies.\n\n- One module per file under `src/`.\n- CLI entrypoint: `src/cli.js`.\n- Shared modules: `src/errors.js`, `src/logger.js`, `src/config.js`."}]}}
+
+--- query: "1001" → expected 02-errors.md ---
+{"jsonrpc":"2.0","id":1,"result":{"protocolVersion":"2024-11-05","capabilities":{"tools":{}},"serverInfo":{"name":"corpus-search","version":"1.0.0"}}}
+{"jsonrpc":"2.0","id":2,"result":{"content":[{"type":"text","text":"[02-errors.md § Errors]\nAll thrown errors are `AppError(code, message)` instances from `src/errors.js`.\n\n- Registry code `1001` means invalid input.\n- The message text for code `1001` is exactly `invalid input`.\n- The CLI prints the registry message to stderr and exits `1`."}]}}
+
+--- query: "startup shutdown" → expected 03-logging.md ---
+{"jsonrpc":"2.0","id":1,"result":{"protocolVersion":"2024-11-05","capabilities":{"tools":{}},"serverInfo":{"name":"corpus-search","version":"1.0.0"}}}
+{"jsonrpc":"2.0","id":2,"result":{"content":[{"type":"text","text":"[03-logging.md § Logging]\nAll diagnostics go through `logger.info(message, context)` from `src/logger.js`.\n\n- The CLI logs one startup and one shutdown entry through the logger.\n- `console.log` is reserved exclusively for CLI stdout payload output."}]}}
+
+--- query: "GREETER" → expected 04-config.md ---
+{"jsonrpc":"2.0","id":1,"result":{"protocolVersion":"2024-11-05","capabilities":{"tools":{}},"serverInfo":{"name":"corpus-search","version":"1.0.0"}}}
+{"jsonrpc":"2.0","id":2,"result":{"content":[{"type":"text","text":"[04-config.md § Configuration]\nConfiguration is read via `src/config.js`.\n\n- Environment prefix `GREETER_`.\n- Property `greeting_template` defaults to `Hello, {name}!`.\n- Runtime code must not hardcode the template."}]}}
+
+--- query: "ok true" → expected 05-output.md ---
+{"jsonrpc":"2.0","id":1,"result":{"protocolVersion":"2024-11-05","capabilities":{"tools":{}},"serverInfo":{"name":"corpus-search","version":"1.0.0"}}}
+{"jsonrpc":"2.0","id":2,"result":{"content":[{"type":"text","text":"[05-output.md § Output]\nService functions return payloads wrapped as `{ ok: true, data: <payload> }`."}]}}
+
+Result: all 5 queries returned correct text and correct source provenance.

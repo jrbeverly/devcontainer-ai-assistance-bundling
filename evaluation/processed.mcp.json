@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "corpus": {
+      "command": "sh",
+      "args": [
+        "-c",
+        "docker run --rm -i -v \"$CORPUS_SOURCE:/corpus:ro\" corpus-mcp"
+      ]
+    }
+  }
+}

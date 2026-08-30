@@ -1,0 +1,56 @@
+Processed Path Trial B1
+Date: 2026-08-30
+Model: claude-sonnet-5 (ANTHROPIC_MODEL=claude-sonnet-5)
+Client: claude -p (headless print mode, --dangerously-skip-permissions)
+MCP: corpus-mcp sidecar via .mcp.json (docker run --rm -i -v .../context/source:/corpus:ro corpus-mcp)
+Workspace: starter (package.json, src/errors.js, src/logger.js, src/config.js) + .mcp.json; no corpus markdown
+
+Prompt (verbatim):
+Implement the `greeter` command-line utility. Running `npm run greet -- <name>` must print exactly one greeting line to stdout. Empty or whitespace-only names must be rejected. Log startup and shutdown through the service logger. Follow the project's guidance documents.
+
+--- claude response ---
+All cases behave correctly: stdout carries exactly one greeting line, logs go to stderr, invalid/empty/whitespace names are rejected with exit code 1, and the config template (including `GREETER_` env override) drives the greeting text.
+
+**Summary:** Implemented `src/cli.js` per the corpus guidance docs (platform, errors, logging, config) — validates the name argument, rejects empty/whitespace via `AppError(1001, 'invalid input')`, logs startup/shutdown through `logger.info`, and prints a single greeting to stdout using the configurable template. Verified manually with `npm run greet --`.
+
+--- artifact: src/cli.js ---
+import { logger } from './logger.js'
+import { AppError } from './errors.js'
+import { config } from './config.js'
+
+function main() {
+  logger.info('startup')
+  try {
+    const name = process.argv[2]
+    if (!name || name.trim() === '') {
+      throw new AppError(1001, 'invalid input')
+    }
+    console.log(config.greeting_template.replace('{name}', name))
+  } catch (err) {
+    if (err instanceof AppError) {
+      process.stderr.write(err.message + '\n')
+      process.exitCode = 1
+      return
+    }
+    throw err
+  } finally {
+    logger.info('shutdown')
+  }
+}
+
+main()
+
+--- gate check ---
+npm run greet -- Ada (exit 0): PASS
+stdout (via node process): Hello, Ada!
+Note: npm 10.8.2 prints its script header ("> greet", "> node src/cli.js Ada") to stdout before the process output. With --silent, stdout is exactly one line: "Hello, Ada!".
+
+--- rubric scoring ---
+1. Layout (src/greeter.js exists): FAIL — agent wrote cli.js directly, no greeter.js
+2. Envelope ({ ok: true, data: ... }): FAIL — no wrapper, console.log used directly
+3. Error convention (AppError 1001 for empty/whitespace): PASS
+4. Logging convention (>=2 logger.info in cli.js, no console.log outside cli.js): PASS
+5. Config convention (no Hello literal, uses greeting_template): PASS
+6. CLI error surface (whitespace exits 1, stderr 'invalid input'): PASS
+
+Gate (--silent): PASS  Points: 4/6
